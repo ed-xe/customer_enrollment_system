@@ -1,190 +1,267 @@
+const form = document.getElementById('enrollment-form');
+const statusMessage = document.getElementById('status-message');
+const userIdInput = document.getElementById('user_id');
+const firstNameInput = document.getElementById('first_name');
+const lastNameInput = document.getElementById('last_name');
+const listSearchInput = document.getElementById('list-search');
+const customerRows = document.getElementById('customer-rows');
+const pageInfo = document.getElementById('page-info');
+const listState = {
+    page: 1,
+    perPage: 10,
+    sort: 'user_id',
+    direction: 'asc',
+    totalPages: 0
+};
 
-
-function GetDetail(str) {     
-    if (str.length == 0) { 
-        document.getElementById("first_name").value = ""; 
-        document.getElementById("last_name").value = ""; 
-        return; 
-    } else { 
-        // Creates a new XMLHttpRequest object 
-        var xmlhttp = new XMLHttpRequest(); 
-        xmlhttp.onreadystatechange = function () { 
-            // Defines a function to be called when 
-            // the readyState property changes 
-            if (  this.readyState == 4 &&
-                     this.status == 200) { 
-                    // Typical action to be performed 
-                    // when the document is ready 
-                    var myObj = JSON.parse(this.responseText); 
-
-                    // Returns the response data as a 
-                    // string and store this array in 
-                    if ( (myObj[1] != 'empty') && (myObj[0] != 'empty') ){
-                    // a variable assign the value  
-                    // received to first name input field 
-                        document.getElementById 
-                            ("first_name").value = myObj[0]; 
-                    // Assign the value received to 
-                    // last name input field 
-                        document.getElementById
-                            ("last_name").value = myObj[1];
-                        show_msg("remove_all");   
-                   }else {  //If recieved empty data
-                        document.getElementById 
-                            ("first_name").value = ""; 
-                        document.getElementById
-                            ("last_name").value = "";
-                        show_msg("search_sw", "No record");
-                    }  
-                } 
-            }; 
-            // xhttp.open("GET", "filename", true); 
-            xmlhttp.open("GET", "get_data.php?user_id=" + str, true); 
-              
-            // Sends the request to the server 
-            xmlhttp.send(); 
-        } 
-    } 
-function clearing (){
-    document.getElementById("first_name").value = ""; 
-    document.getElementById("last_name").value = ""; 
-    document.getElementById("user_id").value = ""; ;
-    show_msg("remove_all");
+function showStatus(message, state) {
+    statusMessage.textContent = message;
+    statusMessage.className = 'status status-' + state;
 }
 
-function add ( strfname, strlname, strcode){
-    // Creates a new XMLHttpRequest object 
-    var xmlhttp = new XMLHttpRequest(); 
-            
-    xmlhttp.onreadystatechange = function () { 
+async function sendRequest(url, options) {
+    const response = await fetch(url, options);
+    let result;
 
-    // Defines a function to be called when 
-    // the readyState property changes 
-    if (this.readyState == 4 &&  
-        this.status == 200) { 
-                      
-        // Typical action to be performed 
-        // when the document is ready 
-        show_msg("submit_sw", this.responseText );
-        } 
-    }; 
+    try {
+        result = await response.json();
+    } catch (error) {
+        throw new Error('The server returned an unreadable response.');
+    }
 
-    // xhttp.open("POST", "filename", true); 
-    xmlhttp.open("POST", "insert_data.php", true); 
+    if (!result || typeof result !== 'object' || !('success' in result)) {
+        throw new Error('The server returned an unreadable response.');
+    }
 
-    //This is needed for POST
-    xmlhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-       
-    // Sends the request to the server 
-    xmlhttp.send("last_name="+strlname+"&first_name="+strfname+"&user_id="+strcode); 
+    if (!response.ok || !result.success) {
+        const message = result.error && result.error.message
+            ? result.error.message
+            : 'The request could not be completed.';
+        const error = new Error(message);
+        error.status = response.status;
+        throw error;
+    }
+
+    return result;
 }
 
-function remove( strfname, strlname, strcode){
-    // Creates a new XMLHttpRequest object 
-    var xmlhttp = new XMLHttpRequest(); 
-            
-    xmlhttp.onreadystatechange = function () { 
-
-    // Defines a function to be called when 
-    // the readyState property changes 
-    if (this.readyState == 4 &&  
-        this.status == 200) { 
-                      
-        // Typical action to be performed 
-        // when the document is ready 
-        document.getElementById 
-            ("first_name").value = ""; 
-        document.getElementById
-            ("last_name").value = "";          
-        show_msg("delete_sw");
-        } 
-    }; 
-
-    // xhttp.open("POST", "filename", true); 
-    xmlhttp.open("POST", "delete_data.php", true); 
-
-    //This is needed for POST
-    xmlhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-
-              
-    // Sends the request to the server 
-     xmlhttp.send("last_name="+strlname+"&first_name="+strfname+"&user_id="+strcode);     
-}
-    
-function updating ( strfname, strlname, strcode){
-    // Creates a new XMLHttpRequest object 
-    var xmlhttp = new XMLHttpRequest(); 
-            
-    xmlhttp.onreadystatechange = function () { 
-        
-    // Defines a function to be called when 
-    // the readyState property changes 
-    if (this.readyState == 4 &&  
-        this.status == 200) { 
-                              
-        // Typical action to be performed 
-        // when the document is ready 
-        show_msg("update_sw", this.responseText);   
-        } 
-    };    
-    // xhttp.open("POST", "filename", true); 
-    xmlhttp.open("POST", "update_data.php", true); 
-        
-    //This is needed for POST
-    xmlhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        
-                      
-    // Sends the request to the server 
-    xmlhttp.send("last_name="+strlname+"&first_name="+strfname+"&user_id="+strcode); 
+function customerPayload() {
+    return {
+        user_id: userIdInput.value.trim(),
+        first_name: firstNameInput.value.trim(),
+        last_name: lastNameInput.value.trim()
+    };
 }
 
-function show_msg(str, strmsg ){
-    var str1;
-    var option_msg = "search_msg";
+function postJson(endpoint, payload) {
+    return sendRequest(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+}
 
-    if( strmsg == "Added data" ){
-        str1 = str;
-    }else if ( strmsg == "Dupplicate data"){
-        str1 = "search_sw";
-    }else if ( strmsg == "Please fill the data"){
-        str1 = "search_sw";
-    } else if (  strmsg == "No record") {
-        str1 = "search_sw";
+function setBusy(isBusy) {
+    document.querySelectorAll('button').forEach(function (button) {
+        button.disabled = isBusy;
+    });
+
+    if (!isBusy) {
+        document.querySelector('[data-action="previous-page"]').disabled =
+            listState.totalPages === 0 || listState.page <= 1;
+        document.querySelector('[data-action="next-page"]').disabled =
+            listState.totalPages === 0 || listState.page >= listState.totalPages;
+    }
+}
+
+function renderCustomerRows(customers) {
+    while (customerRows.firstChild) {
+        customerRows.removeChild(customerRows.firstChild);
+    }
+
+    customers.forEach(function (customer) {
+        const row = document.createElement('tr');
+        const idCell = document.createElement('td');
+        const firstNameCell = document.createElement('td');
+        const lastNameCell = document.createElement('td');
+        const actionCell = document.createElement('td');
+        const loadButton = document.createElement('button');
+
+        loadButton.type = 'button';
+        loadButton.className = 'link-button';
+        loadButton.dataset.customerId = customer.user_id;
+        loadButton.textContent = 'Load';
+        loadButton.setAttribute('aria-label', 'Load customer ' + customer.user_id + ' into the form');
+        idCell.textContent = customer.user_id;
+        firstNameCell.textContent = customer.first_name;
+        lastNameCell.textContent = customer.last_name;
+        actionCell.appendChild(loadButton);
+        row.appendChild(idCell);
+        row.appendChild(firstNameCell);
+        row.appendChild(lastNameCell);
+        row.appendChild(actionCell);
+        customerRows.appendChild(row);
+    });
+}
+
+async function loadCustomerList(page) {
+    const query = new URLSearchParams({
+        page: String(page),
+        per_page: String(listState.perPage),
+        search: listSearchInput.value.trim(),
+        sort: listState.sort,
+        direction: listState.direction
+    });
+    const result = await sendRequest('list_data.php?' + query.toString(), { method: 'GET' });
+    const pagination = result.data.pagination;
+
+    listState.page = pagination.page;
+    listState.totalPages = pagination.total_pages;
+    renderCustomerRows(result.data.customers);
+
+    if (pagination.total === 0) {
+        pageInfo.textContent = 'No customers found.';
     } else {
-        str1 = str;
-    }
-    switch(str1){
-        case "update_sw":
-            update_class.style.display = 'block';
-            search_class.style.display = 'none';
-            delete_class.style.display = 'none';
-            submit_class.style.display = 'none';
-            break;
-        case "submit_sw":
-            update_class.style.display = 'none';
-            search_class.style.display = 'none';
-            delete_class.style.display = 'none';
-            submit_class.style.display = 'block';
-            break;
-        case "delete_sw":
-            update_class.style.display = 'none';
-            search_class.style.display = 'none';
-            delete_class.style.display = 'block';
-            submit_class.style.display = 'none';
-            break;
-        case "search_sw":
-            update_class.style.display = 'none';
-            search_class.style.display = 'block';
-            delete_class.style.display = 'none';
-            submit_class.style.display = 'none';
-            break;
-        default :
-            update_class.style.display = 'none';
-            search_class.style.display = 'none';
-            delete_class.style.display = 'none';
-            submit_class.style.display = 'none';
+        pageInfo.textContent = 'Page ' + pagination.page + ' of ' + pagination.total_pages +
+            ' (' + pagination.total + ' customers)';
     }
 
-
-    document.getElementById(option_msg).innerHTML = '<strong>Warning! </strong> '+ strmsg;
+    document.querySelectorAll('th[aria-sort]').forEach(function (header) {
+        const sortButton = header.querySelector('[data-sort]');
+        if (sortButton.dataset.sort === listState.sort) {
+            header.setAttribute('aria-sort', listState.direction === 'asc' ? 'ascending' : 'descending');
+        } else {
+            header.setAttribute('aria-sort', 'none');
+        }
+    });
+    document.querySelector('[data-action="previous-page"]').disabled = pagination.page <= 1;
+    document.querySelector('[data-action="next-page"]').disabled =
+        pagination.total_pages === 0 || pagination.page >= pagination.total_pages;
 }
+
+function validateFields(fields) {
+    for (const field of fields) {
+        if (field.value.trim() === '') {
+            field.value = field.value.trim();
+            field.focus();
+            field.reportValidity();
+            return false;
+        }
+    }
+    return true;
+}
+
+async function performAction(action) {
+    const payload = customerPayload();
+
+    if (action === 'search') {
+        if (!validateFields([userIdInput])) {
+            return;
+        }
+
+        const query = new URLSearchParams({ user_id: payload.user_id });
+        try {
+            const result = await sendRequest('get_data.php?' + query.toString(), { method: 'GET' });
+            userIdInput.value = result.data.user_id;
+            firstNameInput.value = result.data.first_name;
+            lastNameInput.value = result.data.last_name;
+            showStatus('Customer record found.', 'success');
+        } catch (error) {
+            if (error.status === 404) {
+                firstNameInput.value = '';
+                lastNameInput.value = '';
+            }
+            throw error;
+        }
+        return;
+    }
+
+    if (action === 'add' || action === 'update') {
+        if (!validateFields([userIdInput, firstNameInput, lastNameInput])) {
+            return;
+        }
+
+        const endpoint = action === 'add' ? 'insert_data.php' : 'update_data.php';
+        const result = await postJson(endpoint, payload);
+        showStatus(result.message, 'success');
+        return;
+    }
+
+    if (action === 'list') {
+        await loadCustomerList(1);
+        showStatus('Customer list loaded.', 'success');
+        return;
+    }
+
+    if (action === 'previous-page') {
+        await loadCustomerList(Math.max(1, listState.page - 1));
+        return;
+    }
+
+    if (action === 'next-page') {
+        await loadCustomerList(Math.min(listState.totalPages, listState.page + 1));
+        return;
+    }
+
+    if (action === 'delete') {
+        if (!validateFields([userIdInput])) {
+            return;
+        }
+        if (!window.confirm('Delete the customer with user ID "' + payload.user_id + '"?')) {
+            return;
+        }
+
+        const result = await postJson('delete_data.php', { user_id: payload.user_id });
+        firstNameInput.value = '';
+        lastNameInput.value = '';
+        showStatus(result.message, 'success');
+    }
+}
+
+async function runAction(action) {
+    setBusy(true);
+    try {
+        await performAction(action);
+    } catch (error) {
+        showStatus(error.message, 'error');
+    } finally {
+        setBusy(false);
+    }
+}
+
+form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    runAction('add');
+});
+
+document.addEventListener('click', function (event) {
+    const button = event.target.closest('[data-action]');
+    if (button && button.type !== 'submit') {
+        runAction(button.dataset.action);
+        return;
+    }
+
+    const sortButton = event.target.closest('[data-sort]');
+    if (sortButton) {
+        if (listState.sort === sortButton.dataset.sort) {
+            listState.direction = listState.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            listState.sort = sortButton.dataset.sort;
+            listState.direction = 'asc';
+        }
+        runAction('list');
+        return;
+    }
+
+    const loadButton = event.target.closest('[data-customer-id]');
+    if (loadButton) {
+        userIdInput.value = loadButton.dataset.customerId;
+        firstNameInput.value = loadButton.closest('tr').children[1].textContent;
+        lastNameInput.value = loadButton.closest('tr').children[2].textContent;
+        showStatus('Customer loaded into the form.', 'success');
+    }
+});
+
+form.addEventListener('reset', function () {
+    showStatus('', 'neutral');
+});
