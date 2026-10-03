@@ -3,128 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-
-    <script src= 
-    "https://code.jquery.com/jquery-3.2.1.min.js"> 
-    </script> 
-
-    <script src= 
-    "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
-    type="text/javascript"> 
-    </script> 
-  
-    <link rel="stylesheet" href= 
-    "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"> 
-
-    <script src= 
-    "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"> 
-    </script> 
-
-    <!-- Bootstrap -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.3/dist/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
-
-    <!-- CSS -->
+    <title>Customer Enrollment</title>
     <link rel="stylesheet" href="style.css">
-
-    <title>Simple Enrollment</title>
-
 </head>
 <body>
+    <main class="app-shell">
+        <header class="page-header">
+            <h1>Customer Enrollment</h1>
+            <p>Enroll a customer or find an existing record by user ID.</p>
+        </header>
 
-<div class="container-fluid">
-    <div class = "text-center mt-5">
-    <h1>Customer Enrollment</h1> 
-    </div>
-    
-    <div class="row"> 
-        <div class="col-md-4" style="float:none;margin:auto;" > 
-            <div class="form-group"> 
-                <label>User Id</label> 
-                <input type='text' name="user_id" 
-                    id='user_id' class='form-control'
-                    placeholder='Enter user id'
-                     value=""> 
-            </div> 
-        </div> 
-    </div> 
-    <div class="row"> 
-        <div class="col-md-4" style="float:none;margin:auto;"> 
-            <div class="form-group"> 
-                <label>First Name:</label> 
-                <input type="text" name="first_name" 
-                    id="first_name" class="form-control"
-                    placeholder='First Name'
-                    value=""> 
-            </div> 
-        </div> 
-    </div> 
-    <div class="row"> 
-        <div class="col-md-4" style="float:none;margin:auto;"> 
-            <div class="form-group"> 
-                <label>Last Name:</label> 
-                <input type="text" name="last_name" 
-                    id="last_name" class="form-control"
-                    placeholder='Last Name'
-                    value=""> 
-            </div> 
-        </div> 
-    </div>
-
-
-    <button type = "button" onclick="add(first_name.value, last_name.value, user_id.value)" >Submit</button>
-    <button type = "button" onclick="remove(first_name.value, last_name.value, user_id.value)" >Delete</button>
-    <button type = "button" onclick="GetDetail(user_id.value)">Search</button>
-    <button type = "button" onclick="updating(first_name.value, last_name.value, user_id.value)" >Update</button>
-    <button type = "button" onclick="clearing()">Clear</button>
-   
-</div>
-    <div class="message">
-        <div class="submit_class" id = "submit_class">
-            <div class="alert alert-success" id = "submit_msg" >
-                <strong>Success! </strong> Record was added.
+        <form id="enrollment-form">
+            <div class="field">
+                <label for="user_id">User ID</label>
+                <input type="text" name="user_id" id="user_id" maxlength="255"
+                       autocomplete="off" required>
             </div>
-        </div>
-
-        <div class="update_class" id = "update_class">
-            <div class="alert alert-info" id = "update_msg" >
-                <strong>Notification! </strong> Record was updated.
+            <div class="field">
+                <label for="first_name">First name</label>
+                <input type="text" name="first_name" id="first_name" maxlength="255"
+                       autocomplete="given-name" required>
             </div>
-        </div>
-
-        <div class="search_class" id = "search_class">   
-            <div class="alert alert-warning"  id = "search_msg">
-                
+            <div class="field">
+                <label for="last_name">Last name</label>
+                <input type="text" name="last_name" id="last_name" maxlength="255"
+                       autocomplete="family-name" required>
             </div>
-        </div>
 
-        <div class="delete_class" id = "delete_class"> 
-            <div class="alert alert-danger"  id = "delete_msg" >
-                <strong>Danger! </strong> Record was deleted.
+            <div class="actions">
+                <button type="submit" class="button button-primary">Enroll</button>
+                <button type="button" class="button" data-action="search">Search</button>
+                <button type="button" class="button" data-action="update">Update</button>
+                <button type="button" class="button button-danger" data-action="delete">Delete</button>
+                <button type="reset" class="button button-secondary">Clear</button>
             </div>
-        </div>
-        
-    </div>
-    <div class = "card_margin">
-    <div class="card">
-        <h5 class="card-header">Featured</h5>
-        <div class="card-body">
-          <h5 class="card-title">Simple Enrollment form</h5>
-          <p class="card-text">Tech stacks that was used are PHP, HTML, CSS, JS, SQL and Web API.</p>
-          <a href="#" class="btn btn-primary">Go to my website</a>
-        </div>
-      </div>
-    </div>
+        </form>
 
+        <p id="status-message" class="status" role="status" aria-live="polite"></p>
 
-    
-</div>
-
-
-<script src="script.js" > 
-</script>  
-
-</body> 
+        <section class="customer-list" aria-labelledby="customer-list-title">
+            <h2 id="customer-list-title">Customers</h2>
+            <div class="list-controls">
+                <label for="list-search">Search customers</label>
+                <input type="search" id="list-search" maxlength="255"
+                       placeholder="Search by ID or name">
+                <button type="button" class="button" data-action="list">Load customers</button>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col" aria-sort="ascending">
+                                <button type="button" class="sort-button" data-sort="user_id">User ID</button>
+                            </th>
+                            <th scope="col" aria-sort="none">
+                                <button type="button" class="sort-button" data-sort="first_name">First name</button>
+                            </th>
+                            <th scope="col" aria-sort="none">
+                                <button type="button" class="sort-button" data-sort="last_name">Last name</button>
+                            </th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customer-rows"></tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <span id="page-info" aria-live="polite">Load customers to view records.</span>
+                <div>
+                    <button type="button" class="button" data-action="previous-page" disabled>Previous</button>
+                    <button type="button" class="button" data-action="next-page" disabled>Next</button>
+                </div>
+            </div>
+        </section>
+    </main>
+    <script src="script.js"></script>
+</body>
 </html>

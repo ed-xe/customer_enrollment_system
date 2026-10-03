@@ -1,43 +1,41 @@
 <?php
- 
-$servername = "localhost";
-$username = "root";
-$password = "123456";
-$dbname = "serverdata";
- 
-// Create connection
-$con = mysqli_connect($servername, $username, $password, $dbname); 
 
-$lname1 = $_POST["last_name"];
-$fname1 = $_POST["first_name"];
-$code1 = $_POST["user_id"];
-$pass_dup = 0;
+require_once __DIR__ . '/api_common.php';
+require_once __DIR__ . '/database.php';
 
+api_require_method('POST');
+$payload = api_request_payload();
+$userId = api_required_string($payload, 'user_id', 'User ID');
+$firstName = api_required_string($payload, 'first_name', 'First name');
+$lastName = api_required_string($payload, 'last_name', 'Last name');
 
-if( ( $fname1  != "" ) && ( $lname1 != "" ) &&  ( $code1 != "")){
+try {
+    $connection = database_connection();
+    $statement = $connection->prepare(
+        'INSERT INTO customerlist (Code, Firstname, Lastname) VALUES (?, ?, ?)'
+    );
+    $statement->bind_param('sss', $userId, $firstName, $lastName);
+    $statement->execute();
 
-    $query = mysqli_query($con, "SELECT Code FROM customerlist"); 
-
-	while($row = mysqli_fetch_array($query)){
-        $chkdup = $row["Code"];
-        if ( $chkdup == $code1 ){
-            $pass_dup = 1;
-        }
-    } 
-
-    if ( $pass_dup == 0){
-        $query1 = mysqli_query($con, "INSERT INTO Serverdata.customerlist ( Code, Firstname, Lastname ) VALUES 
-        ('$code1','$fname1', '$lname1');");
-        $jmessage = wordwrap("Added data");
-        echo $jmessage;
-    } else {
-        $jmessage = wordwrap("Dupplicate data");
-        echo $jmessage;
+    api_respond(201, array(
+        'success' => true,
+        'message' => 'Customer enrolled.',
+        'data' => array(
+            'user_id' => $userId,
+            'first_name' => $firstName,
+            'last_name' => $lastName
+        )
+    ));
+} catch (mysqli_sql_exception $exception) {
+    if ((int) $exception->getCode() === 1062) {
+        api_respond(409, array(
+            'success' => false,
+            'error' => array(
+                'code' => 'duplicate_user_id',
+                'message' => 'A customer with that user ID already exists.'
+            )
+        ));
     }
-}else{
-    $jmessage = wordwrap("Please fill the data");
-    echo $jmessage;
+
+    api_database_error($exception);
 }
-
-
-?>

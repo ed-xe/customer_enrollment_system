@@ -1,25 +1,32 @@
 <?php
- 
-$servername = "localhost";
-$username = "root";
-$password = "123456";
-$dbname = "serverdata";
- 
-// Create connection
-$con = mysqli_connect($servername, $username, $password, $dbname); 
 
-$lname1 = $_POST["last_name"];
-$fname1 = $_POST["first_name"];
-$code1 = $_POST["user_id"];
+require_once __DIR__ . '/api_common.php';
+require_once __DIR__ . '/database.php';
 
-if( ( $fname1  != "" ) && ( $lname1 != "" ) &&  ( $code1 != "")){
+api_require_method('POST');
+$payload = api_request_payload();
+$userId = api_required_string($payload, 'user_id', 'User ID');
 
-    $query1 = mysqli_query($con, "DELETE FROM customerlist Where Code = '$code1';");
+try {
+    $connection = database_connection();
+    $statement = $connection->prepare('DELETE FROM customerlist WHERE Code = ?');
+    $statement->bind_param('s', $userId);
+    $statement->execute();
 
-    $jmessage = wordwrap("Deleted data");
-    echo $jmessage;
+    if ($statement->affected_rows === 0) {
+        api_respond(404, array(
+            'success' => false,
+            'error' => array(
+                'code' => 'not_found',
+                'message' => 'No customer was found for that user ID.'
+            )
+        ));
+    }
 
+    api_respond(200, array(
+        'success' => true,
+        'message' => 'Customer deleted.'
+    ));
+} catch (mysqli_sql_exception $exception) {
+    api_database_error($exception);
 }
-
-
-?>

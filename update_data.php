@@ -1,40 +1,48 @@
 <?php
- 
-$servername = "localhost";
-$username = "root";
-$password = "123456";
-$dbname = "serverdata";
- 
-// Create connection
-$con = mysqli_connect($servername, $username, $password, $dbname); 
 
-$lname1 = $_POST["last_name"];
-$fname1 = $_POST["first_name"];
-$code1 = $_POST["user_id"];
-$pass_dup = 0;
+require_once __DIR__ . '/api_common.php';
+require_once __DIR__ . '/database.php';
 
-if( ( $fname1  != "" ) && ( $lname1 != "" ) &&  ( $code1 != "")){
+api_require_method('POST');
+$payload = api_request_payload();
+$userId = api_required_string($payload, 'user_id', 'User ID');
+$firstName = api_required_string($payload, 'first_name', 'First name');
+$lastName = api_required_string($payload, 'last_name', 'Last name');
 
-    $query = mysqli_query($con, "SELECT Code FROM customerlist"); 
+try {
+    $connection = database_connection();
+    $statement = $connection->prepare(
+        'UPDATE customerlist SET Firstname = ?, Lastname = ? WHERE Code = ?'
+    );
+    $statement->bind_param('sss', $firstName, $lastName, $userId);
+    $statement->execute();
 
-	while($row = mysqli_fetch_array($query)){
-        $chkdup = $row["Code"];
-        if ( $chkdup == $code1 ){
-            $pass_dup = 1; //user_id is existed
+    if ($statement->affected_rows === 0) {
+        $check = $connection->prepare('SELECT Code FROM customerlist WHERE Code = ? LIMIT 1');
+        $check->bind_param('s', $userId);
+        $check->execute();
+        $check->store_result();
+
+        if ($check->num_rows === 0) {
+            api_respond(404, array(
+                'success' => false,
+                'error' => array(
+                    'code' => 'not_found',
+                    'message' => 'No customer was found for that user ID.'
+                )
+            ));
         }
-    } 
-
-    if ( $pass_dup == 1){
-    $query1 = mysqli_query($con, "UPDATE customerlist SET Firstname = '$fname1', Lastname = '$lname1' Where Code = '$code1';");
-    $jmessage = wordwrap("Updated data");
-    echo $jmessage;
-    } else {
-    $jmessage = wordwrap("No record");
-    echo $jmessage;
     }
 
-} else {
-    $jmessage = wordwrap("Please fill the data");
-    echo $jmessage;
+    api_respond(200, array(
+        'success' => true,
+        'message' => 'Customer updated.',
+        'data' => array(
+            'user_id' => $userId,
+            'first_name' => $firstName,
+            'last_name' => $lastName
+        )
+    ));
+} catch (mysqli_sql_exception $exception) {
+    api_database_error($exception);
 }
-?>

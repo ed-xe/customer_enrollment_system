@@ -1,56 +1,38 @@
-<?php 
+<?php
 
+require_once __DIR__ . '/api_common.php';
+require_once __DIR__ . '/database.php';
 
-$servername = "localhost";
-$username = "root";
-$password = "123456";
-$dbname = "serverdata";
+api_require_method('GET');
+$userId = api_required_string($_GET, 'user_id', 'User ID');
 
-// Get the user id 
-$user_id = $_REQUEST['user_id']; 
+try {
+    $connection = database_connection();
+    $statement = $connection->prepare(
+        'SELECT Firstname, Lastname FROM customerlist WHERE Code = ? LIMIT 1'
+    );
+    $statement->bind_param('s', $userId);
+    $statement->execute();
+    $statement->bind_result($firstName, $lastName);
 
-// Database connection 
-$con = mysqli_connect($servername, $username, $password, $dbname); 
+    if (!$statement->fetch()) {
+        api_respond(404, array(
+            'success' => false,
+            'error' => array(
+                'code' => 'not_found',
+                'message' => 'No customer was found for that user ID.'
+            )
+        ));
+    }
 
-if ($user_id !== "") { 
-	
-	// Get corresponding first name and 
-	// last name for that user id	 
-	$query = mysqli_query($con, "SELECT Firstname, 
-	Lastname FROM customerlist WHERE Code='$user_id'"); 
-
-	$row = mysqli_fetch_array($query); 
-
-
-	if (mysqli_num_rows($query) != 0)
-	{
-		//results found
-		// Get the first name 
-		$first_name = $row["Firstname"]; 
-
-		// Get the first name 
-		$last_name = $row["Lastname"]; 
-
-	} else {
-		// results not found
-			// Get the first name 
-		$first_name = "empty"; 
-
-		// Get the first name 
-		$last_name = "empty"; 
-	}
-
-
-} 
-
-// Store it in a array 
-$result = array("$first_name", "$last_name"); 
-
-// Send in JSON encoded form 
-$myJSON = json_encode($result); 
-
-echo $myJSON; 
-
-
-
-?> 
+    api_respond(200, array(
+        'success' => true,
+        'data' => array(
+            'user_id' => $userId,
+            'first_name' => $firstName,
+            'last_name' => $lastName
+        )
+    ));
+} catch (mysqli_sql_exception $exception) {
+    api_database_error($exception);
+}
